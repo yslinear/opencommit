@@ -70,12 +70,14 @@ You can also run it with local model through ollama:
 git add <files...>
 OCO_AI_PROVIDER='ollama' opencommit
 ```
+
 if you have ollama that is set up in docker/ on another machine with GPUs (not locally), you can change the default endpoint url.
 You can do so by setting the `OCO_OLLAMA_API_URL` environment variable as follows:
 
 ```sh
 OCO_OLLAMA_API_URL='http://192.168.1.10:11434/api/chat' opencommit
 ```
+
 where 192.168.1.10 is example of endpoint URL, where you have ollama set up.
 
 ### Flags
@@ -87,7 +89,7 @@ There are multiple optional flags that can be used with the `oco` command:
 This flag can only be used if the `OCO_EMOJI` configuration item is set to `true`. This flag allows users to use all emojis in the GitMoji specification, By default, the GitMoji full specification is set to `false`, which only includes 10 emojis (🐛✨📝🚀✅♻️⬆️🔧🌐💡).
 This is due to limit the number of tokens sent in each request. However, if you would like to use the full GitMoji specification, you can use the `--fgm` flag.
 
-```
+```sh
 oco --fgm
 ```
 
@@ -95,11 +97,13 @@ oco --fgm
 
 This flag allows users to automatically commit the changes without having to manually confirm the commit message. This is useful for users who want to streamline the commit process and avoid additional steps. To use this flag, you can run the following command:
 
-```
+```sh
 oco --yes
 ```
 
 ## Configuration
+
+OpenCommit offers various configuration options to customize its behavior. You can set these configurations either globally for all repositories or locally for a specific repository.
 
 ### Local per repo configuration
 
@@ -119,140 +123,158 @@ OCO_PROMPT_MODULE=<either conventional-commit or @commitlint, default: conventio
 OCO_ONE_LINE_COMMIT=<one line commit message, default: false>
 ```
 
-### Global config for all repos
+### Global Configuration
 
-Local config still has more priority than Global config, but you may set `OCO_MODEL` and `OCO_LOCALE` globally and set local configs for `OCO_EMOJI` and `OCO_DESCRIPTION` per repo which is more convenient.
-
-Simply set any of the variables above like this:
+To set global configurations that apply to all repositories:
 
 ```sh
-oco config set OCO_MODEL=gpt-4
+oco config set <CONFIG_KEY>=<VALUE>
 ```
 
-Configure [GitMoji](https://gitmoji.dev/) to preface a message.
+### Available Configuration Options
+
+For a more detailed explanation of each configuration option:
+
+| Config Key | Description | Default Value | Possible Values |
+|------------|-------------|---------------|-----------------|
+| `OCO_OPENAI_API_KEY` | Your OpenAI API key | - | Valid OpenAI API key |
+| `OCO_ANTHROPIC_API_KEY` | Your Anthropic API key | - | Valid Anthropic API key |
+| `OCO_AZURE_API_KEY` | Your Azure OpenAI API key | - | Valid Azure API key |
+| `OCO_TOKENS_MAX_INPUT` | Maximum number of input tokens | 4096 | Positive integer |
+| `OCO_TOKENS_MAX_OUTPUT` | Maximum number of output tokens | 500 | Positive integer |
+| `OCO_OPENAI_BASE_PATH` | Custom base path for OpenAI API | - | Valid URL string |
+| `OCO_DESCRIPTION` | Include a detailed description in commit messages | false | `true` or `false` |
+| `OCO_EMOJI` | Include emojis in commit messages | false | `true` or `false` |
+| `OCO_MODEL` | AI model to use | 'gpt-3.5-turbo' | See [Supported Models](#supported-models) |
+| `OCO_LANGUAGE` | Language for commit messages | 'en' | See [Supported Languages](#supported-languages) |
+| `OCO_MESSAGE_TEMPLATE_PLACEHOLDER` | Placeholder for custom message templates | '$msg' | String starting with '$' |
+| `OCO_PROMPT_MODULE` | Commit message style | 'conventional-commit' | 'conventional-commit' or '@commitlint' |
+| `OCO_AI_PROVIDER` | AI service provider | 'openai' | 'openai', 'anthropic', 'azure', 'ollama', or 'test' |
+| `OCO_GITPUSH` | Automatically push commits | true | `true` or `false` |
+| `OCO_ONE_LINE_COMMIT` | Generate one-line commit messages | false | `true` or `false` |
+| `OCO_AZURE_ENDPOINT` | Azure OpenAI endpoint | - | Valid Azure endpoint URL |
+| `OCO_OLLAMA_API_URL` | Custom Ollama API URL | - | Valid URL string |
+
+### Supported Models
+
+#### OpenAI Models
+
+- gpt-3.5-turbo
+- gpt-3.5-turbo-0125
+- gpt-4
+- gpt-4-turbo
+- gpt-4-1106-preview
+- gpt-4-turbo-preview
+- gpt-4-0125-preview
+- gpt-4o
+
+#### Anthropic Models
+
+- claude-3-haiku-20240307
+- claude-3-sonnet-20240229
+- claude-3-opus-20240229
+
+### Supported Languages
+
+OpenCommit supports various languages for generating commit messages. The available languages can be found in the [i18n folder](https://github.com/di-sukharev/opencommit/tree/master/src/i18n) of the repository.
+
+To set a language:
 
 ```sh
-oco config set OCO_EMOJI=true
+oco config set OCO_LANGUAGE=<language_code>
 ```
 
-To remove preface emojis:
+Example:
 
 ```sh
-oco config set OCO_EMOJI=false
+oco config set OCO_LANGUAGE=fr  # Set language to French
 ```
 
-### Switch to GPT-4 or other models
+### Using Different AI Providers
 
-By default, OpenCommit uses `gpt-3.5-turbo` model.
+OpenCommit supports multiple AI providers. To switch between them:
 
-You may switch to GPT-4 which performs better, but costs ~x15 times more 🤠
+#### OpenAI (default)
 
 ```sh
-oco config set OCO_MODEL=gpt-4
+oco config set OCO_AI_PROVIDER=openai
+oco config set OCO_OPENAI_API_KEY=<your_openai_api_key>
 ```
 
-or for as a cheaper option:
+#### Anthropic
 
 ```sh
-oco config set OCO_MODEL=gpt-3.5-turbo
+oco config set OCO_AI_PROVIDER=anthropic
+oco config set OCO_ANTHROPIC_API_KEY=<your_anthropic_api_key>
 ```
 
-or for GPT-4 Turbo (Preview) which is more capable, has knowledge of world events up to April 2023, a 128k context window and 2-3x cheaper vs GPT-4:
+#### Azure OpenAI
 
 ```sh
-oco config set OCO_MODEL=gpt-4-0125-preview
+oco config set OCO_AI_PROVIDER=azure
+oco config set OCO_AZURE_API_KEY=<your_azure_api_key>
+oco config set OCO_AZURE_ENDPOINT=<your_azure_endpoint>
 ```
 
-Make sure that you spell it `gpt-4` (lowercase) and that you have API access to the 4th model. Even if you have ChatGPT+, that doesn't necessarily mean that you have API access to GPT-4.
-
-### Switch to Azure OpenAI
-
-By default OpenCommit uses [OpenAI](https://openai.com).
-
-You could switch to [Azure OpenAI Service](https://learn.microsoft.com/azure/cognitive-services/openai/)🚀
+#### Ollama (for local AI models)
 
 ```sh
-opencommit config set OCO_AI_PROVIDER=azure
+oco config set OCO_AI_PROVIDER=ollama
+# Optionally, set a custom API URL:
+oco config set OCO_OLLAMA_API_URL=http://localhost:11434/api/chat
 ```
 
-Of course need to set 'OPENAI_API_KEY'. And also need to set the
-'OPENAI_BASE_PATH' for the endpoint and set the deployment name to
-'model'.
+### Advanced Configuration
 
-### Locale configuration
+#### Custom Message Templates
 
-To globally specify the language used to generate commit messages:
+You can customize the commit message template using the `OCO_MESSAGE_TEMPLATE_PLACEHOLDER` config:
 
 ```sh
-# de, German ,Deutsch
-oco config set OCO_LANGUAGE=de
-oco config set OCO_LANGUAGE=German
-oco config set OCO_LANGUAGE=Deutsch
-
-# fr, French, française
-oco config set OCO_LANGUAGE=fr
-oco config set OCO_LANGUAGE=French
-oco config set OCO_LANGUAGE=française
+oco config set OCO_MESSAGE_TEMPLATE_PLACEHOLDER='$msg'
 ```
 
-The default language setting is **English**
-All available languages are currently listed in the [i18n](https://github.com/di-sukharev/opencommit/tree/master/src/i18n) folder
-
-### Push to git
-
-Pushing to git is on by default but if you would like to turn it off just use:
+Then use it in your commit command:
 
 ```sh
-oco config set OCO_GITPUSH=false
+oco '#205: $msg'
 ```
 
-### Switch to `@commitlint`
+This will include the issue number in your commit message.
 
-OpenCommit allows you to choose the prompt module used to generate commit messages. By default, OpenCommit uses its conventional-commit message generator. However, you can switch to using the `@commitlint` prompt module if you prefer. This option lets you generate commit messages in respect with the local config.
+#### Commit Message Style
 
-You can set this option by running the following command:
-
-```sh
-oco config set OCO_PROMPT_MODULE=<module>
-```
-
-Replace `<module>` with either `conventional-commit` or `@commitlint`.
-
-#### Example:
-
-To switch to using th` '@commitlint` prompt module, run:
+Choose between conventional commits and commitlint style:
 
 ```sh
+# For conventional commits (default)
+oco config set OCO_PROMPT_MODULE=conventional-commit
+
+# For commitlint style
 oco config set OCO_PROMPT_MODULE=@commitlint
 ```
 
-To switch back to the default conventional-commit message generator, run:
+#### One-Line Commit Messages
+
+To generate concise, one-line commit messages:
 
 ```sh
-oco config set OCO_PROMPT_MODULE=conventional-commit
+oco config set OCO_ONE_LINE_COMMIT=true
 ```
 
-#### Integrating with `@commitlint`
+### Viewing Current Configuration
 
-The integration between `@commitlint` and OpenCommit is done automatically the first time OpenCommit is run with `OCO_PROMPT_MODULE` set to `@commitlint`. However, if you need to force set or reset the configuration for `@commitlint`, you can run the following command:
+To view the current value of a configuration option:
 
 ```sh
-oco commitlint force
+oco config get <CONFIG_KEY>
 ```
 
-To view the generated configuration for `@commitlint`, you can use this command:
+Example:
 
 ```sh
-oco commitlint get
+oco config get OCO_MODEL
 ```
-
-This allows you to ensure that the configuration is set up as desired.
-
-Additionally, the integration creates a file named `.opencommit-commitlint` which contains the prompts used for the local `@commitlint` configuration. You can modify this file to fine-tune the example commit message generated by OpenAI. This gives you the flexibility to make adjustments based on your preferences or project guidelines.
-
-OpenCommit generates a file named `.opencommit-commitlint` in your project directory which contains the prompts used for the local `@commitlint` configuration. You can modify this file to fine-tune the example commit message generated by OpenAI. If the local `@commitlint` configuration changes, this file will be updated the next time OpenCommit is run.
-
-This offers you greater control over the generated commit messages, allowing for customization that aligns with your project's conventions.
 
 ## Git flags
 
@@ -271,7 +293,7 @@ git commit -m "${generatedMessage}" --no-verify
 To include a message in the generated message, you can utilize the template function, for instance:
 
 ```sh
-oco '#205: $msg’
+oco '#205: $msg'
 ```
 
 > opencommit examines placeholders in the parameters, allowing you to append additional information before and after the placeholders, such as the relevant Issue or Pull Request. Similarly, you have the option to customize the OCO_MESSAGE_TEMPLATE_PLACEHOLDER configuration item, for example, simplifying it to $m!"
@@ -297,7 +319,7 @@ This line is responsible for replacing the placeholder in the `messageTemplate` 
 
 #### Usage
 
-For instance, using the command `oco '$msg #205’`, users can leverage this feature. The provided code represents the backend mechanics of such commands, ensuring that the placeholder is replaced with the appropriate commit message.
+For instance, using the command `oco '$msg #205'`, users can leverage this feature. The provided code represents the backend mechanics of such commands, ensuring that the placeholder is replaced with the appropriate commit message.
 
 #### Committing with the Message
 
